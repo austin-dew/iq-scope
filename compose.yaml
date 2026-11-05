@@ -1,0 +1,37 @@
+services:
+  iq-scope:
+    container_name: iq-scope
+    build:
+      context: .
+      target: runtime
+    image: iq-scope:local
+    restart: unless-stopped
+    user: "1000:1000"
+    # Published on localhost only; tailscale serve is the only way in from outside.
+    ports:
+      - "127.0.0.1:8850:8000"
+    volumes:
+      # rslave passes the host's mounts into the container, so the share can go away
+      # and come back without a container restart.
+      - type: bind
+        source: /mnt/radio
+        target: /radio
+        bind:
+          propagation: rslave
+      - /srv/iq-scope/cache:/cache
+    environment:
+      IQSCOPE_RADIO_DIR: /radio
+      IQSCOPE_CACHE_DIR: /cache
+    # The host runs other things too, so this can't take the whole machine.
+    cpus: 2.0
+    mem_limit: 2g
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8000/api/health', timeout=8)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

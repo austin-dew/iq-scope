@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CONELRAD SIGNAL ANALYZER</title>
+  <link rel="icon" href="data:,">
+  <script src="/theme-early.js"></script>
+</head>
+<body>
+  <div id="boot" class="boot" data-testid="boot" aria-hidden="true">
+    <div id="boot-lines" class="boot-lines"></div>
+    <div class="boot-skip">PRESS ANY KEY TO SKIP</div>
+  </div>
+
+  <header class="titlebar">
+    <h1>CONELRAD SIGNAL ANALYZER</h1>
+    <span id="title-frequency" class="readout" data-testid="title-frequency">--</span>
+    <span id="title-mode" class="readout">--</span>
+    <button id="analysis-toggle" data-testid="analysis-toggle" aria-pressed="false" title="Show axes, sample numbers, levels and cursors. The signal and sound don't change.">[ ANALYSIS: OFF ]</button>
+    <span id="archive" class="status" data-testid="archive">CHECKING</span>
+    <button id="open-settings" data-testid="open-settings">[ SETTINGS ]</button>
+  </header>
+
+  <div id="archive-note" class="banner" data-testid="archive-note" hidden></div>
+  <div id="banner" class="banner" hidden></div>
+
+  <main class="layout">
+    <aside class="files" aria-label="Recordings">
+      <div class="aside-tabs" role="group" aria-label="What to list">
+        <button id="show-files" data-testid="show-files" aria-pressed="true">[ FILES ]</button>
+        <button id="show-examples" data-testid="show-examples" aria-pressed="false">[ EXAMPLES ]</button>
+        <button id="show-upload" data-testid="show-upload" aria-pressed="false">[ UPLOAD ]</button>
+      </div>
+      <div id="file-tools" class="file-tools">
+        <button id="rescan" data-testid="rescan" title="Look for new recordings now, instead of at the next check">RESCAN</button>
+        <span id="rescan-status" class="label" data-testid="rescan-status"></span>
+      </div>
+      <ul id="arriving" class="arriving" data-testid="arriving"></ul>
+      <ul id="file-list" data-testid="file-list"></ul>
+      <div id="upload" class="upload" data-testid="upload" hidden>
+        <label class="upload-drop" data-testid="upload-drop">
+          <input id="upload-input" data-testid="upload-input" type="file" accept=".wav" multiple>
+          <span>CHOOSE .WAV FILES</span>
+          <span class="label">OR DROP THEM ANYWHERE IN THIS COLUMN</span>
+        </label>
+        <p class="label">THEY GO TO recordings/uploads ON THE ARCHIVE. IF THE CONNECTION DROPS, THEY CARRY ON BY THEMSELVES.</p>
+        <ul id="upload-jobs" data-testid="upload-jobs"></ul>
+        <ul id="upload-unfinished" data-testid="upload-unfinished"></ul>
+      </div>
+    </aside>
+
+    <section class="scope" aria-label="Scope">
+      <div id="file-info" class="file-info" data-testid="file-info">SELECT A RECORDING</div>
+      <div id="question" class="question" hidden></div>
+
+      <div class="waterfall-frame">
+        <canvas id="waterfall" data-testid="waterfall"></canvas>
+      </div>
+
+
+      <div class="view-controls">
+        <span class="label">FREQ</span>
+        <button id="freq-out" title="Show more of the band">-</button>
+        <button id="freq-in" title="Show less of the band, in more detail">+</button>
+        <span class="label">TIME</span>
+        <button id="time-out" title="Show more of the recording">-</button>
+        <button id="time-in" title="Show less of the recording, in more detail">+</button>
+        <button id="fit">FIT</button>
+        <span class="label">FLOOR</span>
+        <input id="floor" type="range" min="0" max="200" value="90" aria-label="Waterfall floor">
+        <span class="label">CEIL</span>
+        <input id="ceiling" type="range" min="50" max="255" value="200" aria-label="Waterfall ceiling">
+        <button id="contrast-reset" data-testid="contrast-reset" title="Put floor and ceiling back to the values chosen for this recording">RESET</button>
+        <div id="analysis-controls" class="analysis-controls" data-testid="analysis-controls" hidden>
+          <button id="cursor-arm" data-testid="cursor-arm" aria-pressed="false" title="Clicks on the waterfall place cursors instead of tuning. Shift+click always does.">PLACE CURSORS</button>
+          <button id="cursor-clear" data-testid="cursor-clear">CLEAR</button>
+          <div id="constellation-source" class="constellation-source" role="group" aria-label="Constellation source">
+            <span class="label">CONSTELLATION</span>
+            <button id="constellation-tuned" data-testid="constellation-tuned" aria-pressed="true" title="The pairs after tuning and filtering, which the sound is made from">TUNED</button>
+            <button id="constellation-raw" data-testid="constellation-raw" aria-pressed="false" title="The pairs exactly as recorded, with every signal in the band at once">RAW</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tuning">
+        <div id="modes" class="modes" role="group" aria-label="Mode"></div>
+        <label class="field">
+          <span class="label">TUNE kHz</span>
+          <input id="tune" type="text" inputmode="decimal" data-testid="tune" autocomplete="off">
+        </label>
+        <div class="steps" role="group" aria-label="Fine tuning">
+          <button data-step="-1000">-1k</button>
+          <button data-step="-100">-100</button>
+          <button data-step="-10">-10</button>
+          <button data-step="10">+10</button>
+          <button data-step="100">+100</button>
+          <button data-step="1000">+1k</button>
+        </div>
+        <label class="field">
+          <span id="bw-label" class="label">BW Hz</span>
+          <input id="bw" type="number" min="100" step="100" data-testid="bw">
+        </label>
+        <div id="tabs" class="tabs" role="group" aria-label="Lower panels" hidden>
+          <button data-tab="panels" data-testid="tab-panels" aria-pressed="true">[ SCOPE ]</button>
+          <button data-tab="path" data-testid="tab-path" aria-pressed="false">[ SIGNAL PATH ]</button>
+          <button data-tab="notes" data-testid="tab-notes" aria-pressed="false">[ WHAT AM I SEEING? ]</button>
+          <button data-tab="markers" data-testid="tab-markers" aria-pressed="false">[ MARKERS ]</button>
+        </div>
+      </div>
+
+      <div id="path" class="path" data-testid="path" hidden>
+        <figure class="panel"><figcaption>1 RAW BAND</figcaption><canvas id="path-raw"></canvas></figure>
+        <figure class="panel"><figcaption>2 TUNED</figcaption><canvas id="path-tuned"></canvas></figure>
+        <figure class="panel"><figcaption>3 FILTERED</figcaption><canvas id="path-filtered"></canvas></figure>
+        <figure class="panel"><figcaption>4 DEMODULATED</figcaption><canvas id="path-demod"></canvas></figure>
+        <figure class="panel"><figcaption>5 SOUND</figcaption><canvas id="path-sound"></canvas></figure>
+        <p id="path-formula" class="path-formula" data-testid="path-formula"></p>
+      </div>
+
+      <div id="notes" class="notes" data-testid="notes" hidden></div>
+
+      <div id="markers" class="markers" data-testid="markers" hidden>
+        <div class="marker-add">
+          <button id="add-marker" data-testid="add-marker" title="Mark this moment (M)">MARK HERE (M)</button>
+          <span class="label">RADIO RETUNED HERE TO kHz</span>
+          <input id="mark-frequency" data-testid="mark-frequency" type="text" inputmode="decimal" autocomplete="off" aria-label="New center frequency in kHz">
+          <button id="add-frequency" data-testid="add-frequency">SET</button>
+        </div>
+        <ul id="marker-list" data-testid="marker-list"></ul>
+      </div>
+
+      <div id="panels" class="panels" hidden>
+        <figure class="panel constellation">
+          <figcaption>I/Q CONSTELLATION</figcaption>
+          <canvas id="constellation" data-testid="constellation"></canvas>
+        </figure>
+        <figure class="panel phasor">
+          <figcaption>PHASOR</figcaption>
+          <canvas id="phasor" data-testid="phasor"></canvas>
+        </figure>
+        <figure class="panel pair-sample">
+          <figcaption>PAIR &gt; SAMPLE</figcaption>
+          <pre id="pair-sample" data-testid="pair-sample">WAITING FOR DATA</pre>
+        </figure>
+        <figure id="analysis-bar" class="panel readout-panel" data-testid="analysis-bar" hidden>
+          <figcaption>READOUT: dBFS NOT CALIBRATED</figcaption>
+          <div class="readout-body">
+            <div id="analysis-numbers" data-testid="analysis-numbers"></div>
+            <div id="cursor-readout" class="cursor-readout" data-testid="cursor-readout"></div>
+          </div>
+        </figure>
+        <figure class="panel spectrum">
+          <div class="closeup-bar">
+            <figcaption>CLOSE-UP</figcaption>
+            <button id="slice-narrow" data-testid="slice-narrow" title="Show less of the band, in more detail">+</button>
+            <button id="slice-wide" data-testid="slice-wide" title="Show more of the band">-</button>
+            <button id="slice-center" data-testid="slice-center" title="Move this window to the tuner">CENTER</button>
+          </div>
+          <canvas id="spectrum" data-testid="spectrum"></canvas>
+        </figure>
+        <figure class="panel traces">
+          <figcaption>I(t) / Q(t)</figcaption>
+          <canvas id="traces" data-testid="traces"></canvas>
+        </figure>
+        <figure class="panel waveform">
+          <figcaption>DEMODULATED AUDIO</figcaption>
+          <canvas id="waveform" data-testid="waveform"></canvas>
+        </figure>
+      </div>
+
+      <div class="transport">
+        <button id="back" title="Back 5 seconds">&lt;&lt;</button>
+        <button id="play" data-testid="play" disabled>PLAY</button>
+        <button id="forward" title="Forward 5 seconds">&gt;&gt;</button>
+        <input id="scrub" data-testid="scrub" type="range" min="0" max="1" step="0.001" value="0" aria-label="Position" disabled>
+        <label class="field volume">
+          <span class="label">VOL</span>
+          <input id="volume" data-testid="volume" type="range" min="0" max="100" value="100" aria-label="Volume">
+        </label>
+        <span id="time" class="readout" data-testid="time">00:00.000</span>
+        <div id="speeds" class="speeds" role="group" aria-label="Speed"></div>
+        <button id="step-back" data-testid="step-back" title="Back one pair (left arrow; Shift for 100)" disabled>&lt; PAIR</button>
+        <button id="step-forward" data-testid="step-forward" title="Forward one pair (right arrow; Shift for 100)" disabled>PAIR &gt;</button>
+        <span id="muted" class="status alert" data-testid="muted" hidden>AUDIO MUTED</span>
+        <span id="status" class="status" data-testid="status"></span>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="settings" class="settings" data-testid="settings" aria-labelledby="settings-title">
+    <h2 id="settings-title">[ SETTINGS ]</h2>
+    <div class="setting" role="group" aria-label="Color">
+      <span class="label">COLOR</span>
+      <button data-setting="theme" data-value="green" data-testid="theme-green">GREEN</button>
+      <button data-setting="theme" data-value="amber" data-testid="theme-amber">AMBER</button>
+      <button data-setting="theme" data-value="white" data-testid="theme-white">WHITE</button>
+      <button data-setting="theme" data-value="blue" data-testid="theme-blue">BLUE</button>
+      <button data-setting="theme" data-value="magenta" data-testid="theme-magenta">MAGENTA</button>
+    </div>
+    <div class="setting" role="group" aria-label="Screen effects">
+      <span class="label">SCREEN EFFECTS</span>
+      <button data-setting="effects" data-value="true" data-testid="effects-on">ON</button>
+      <button data-setting="effects" data-value="false" data-testid="effects-off">OFF</button>
+    </div>
+    <div class="setting" role="group" aria-label="Boot sequence">
+      <span class="label">BOOT SEQUENCE</span>
+      <button data-setting="boot" data-value="true" data-testid="boot-on">ON</button>
+      <button data-setting="boot" data-value="false" data-testid="boot-off">OFF</button>
+    </div>
+    <p id="motion-note" class="settings-note" data-testid="motion-note" hidden>THIS DEVICE ASKS FOR REDUCED MOTION, SO THE BOOT SEQUENCE AND BLINKING STAY OFF.</p>
+    <p class="settings-note">FONTS: VT323 AND SHARE TECH MONO, UNDER THE SIL OPEN FONT LICENSE (<a href="/fonts/LICENSE-vt323.txt">VT323</a>, <a href="/fonts/LICENSE-share-tech-mono.txt">SHARE TECH MONO</a>).</p>
+    <button id="close-settings" data-testid="close-settings">CLOSE</button>
+  </dialog>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

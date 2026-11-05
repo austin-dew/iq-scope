@@ -1,0 +1,13 @@
+.git
+.venv
+.pytest_cache
+examples
+**/__pycache__
+*.egg-info
+**/*.egg-info
+*.wav
+frontend/node_modules
+frontend/test-results
+frontend/playwright-report
+backend/iqscope/static
+listening

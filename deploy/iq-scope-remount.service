@@ -1,0 +1,10 @@
+[Unit]
+Description=Mount the IQ Scope archive if it isn't mounted
+After=network-online.target tailscaled.service
+
+[Service]
+Type=oneshot
+# The leading "-" keeps a failed try from marking the unit failed: the NAS being off isn't a
+# fault on this machine, and the timer simply tries again in a minute.
+ExecStart=-/bin/sh -c 'mountpoint -q /mnt/radio || mount /mnt/radio'
+TimeoutStartSec=150

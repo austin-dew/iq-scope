@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+node_modules/
+dist/
+
+# Recordings and generated clips are large; regenerate with scripts/generate_examples.py
+*.wav
+*.part
+examples/
+listening/
+
+# Built from frontend/ by npm run build
+backend/iqscope/static/
+frontend/test-results/
+frontend/playwright-report/
+
+# Personal notes: real hostnames and addresses, never published
+LOCAL-NOTES.md

@@ -1,0 +1,11 @@
+[Unit]
+Description=Keep trying to mount the IQ Scope archive
+
+[Timer]
+OnBootSec=1min
+# Counted from when the last try finished, so a slow try can't overlap the next one.
+OnUnitInactiveSec=1min
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target
